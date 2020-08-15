@@ -1,0 +1,3 @@
+[submodule "ResponseBot"]
+	path = ResponseBot
+	url = https://github.com/openjusticebaltimore/ResponseBot.git
