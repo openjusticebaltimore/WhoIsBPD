@@ -1,6 +1,7 @@
 [submodule "ResponseBot"]
 	path = ResponseBot
 	url = https://github.com/openjusticebaltimore/ResponseBot.git
+	branch = main
 [submodule "BPDWatch"]
 	path = BPDWatch
 	url = https://github.com/openjusticebaltimore/BPDWatch.git
