@@ -14,14 +14,14 @@ locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 def generate_tweet(officer):
     text = ""
-    if officer.assignments.count() > 0:
-        if officer.assignments[0].job.job_title != 'Not Sure':
+    if officer.assignments.count() > 0 and officer.assignments[0].job.job_title != 'Not Sure':
             text += f"{officer.assignments[0].job.job_title} "
+    text += f"{officer.full_name()} ({officer.unique_internal_identifier.upper()})"
+    if officer.salaries.count() > 0:
         total_pay = officer.salaries[0].salary - officer.salaries[0].overtime_pay
-        text += f"{officer.full_name()} ({officer.unique_internal_identifier.upper()}) made "
-        text += f"{locale.currency(total_pay, grouping=True)} in {officer.salaries[0].year}."
+        text += f" made {locale.currency(total_pay, grouping=True)} in {officer.salaries[0].year}."
     else:
-        text += f"{officer.full_name()} ({officer.unique_internal_identifier.upper()})."
+        text += "."
     if officer.incidents:
         if len(officer.incidents) == 1:
             text += f" {officer.last_name} was involved in 1 incident."
