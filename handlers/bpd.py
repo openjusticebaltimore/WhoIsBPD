@@ -20,7 +20,10 @@ def generate_tweet(officer):
     text += f"{officer.full_name()} ({officer.unique_internal_identifier.upper()}) made "
     text += f"{locale.currency(total_pay, grouping=True)} in {officer.salaries[0].year}."
     if officer.incidents:
-        text += f" {officer.last_name} was involved in {len(officer.incidents)} incidents."
+        if len(officer.incidents) == 1:
+            text += f" {officer.last_name} was involved in 1 incident."
+        else:
+            text += f" {officer.last_name} was involved in {len(officer.incidents)} incidents."
     text += f" Full profile: https://bpdwatch.com/officer/{officer.id}."
     logging.info(f"Generated tweet: {text}")
     return text
