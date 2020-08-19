@@ -17,7 +17,7 @@ def generate_tweet(officer):
     if officer.assignments.count() > 0 and officer.assignments[0].job.job_title != 'Not Sure':
             text += f"{officer.assignments[0].job.job_title} "
     text += f"{officer.full_name()} ({officer.unique_internal_identifier.upper()})"
-    if officer.salaries.count() > 0:
+    if officer.salaries and len(officer.salaries) > 0:
         total_pay = officer.salaries[0].salary - officer.salaries[0].overtime_pay
         text += f" made {locale.currency(total_pay, grouping=True)} in {officer.salaries[0].year}."
     else:
