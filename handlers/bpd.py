@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'ResponseBot'))
 from responsebot.handlers import BaseTweetHandler, register_handler
 from responsebot.models import TweetFilter
 
-locale.setlocale(locale.LC_ALL, '')
+locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 
 def generate_tweet(officer):
