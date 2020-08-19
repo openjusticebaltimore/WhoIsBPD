@@ -51,13 +51,13 @@ class BPDHandler(BaseTweetHandler):
             for link in _tweet.entities['urls']:
                 r = requests.get(link['expanded_url'])
                 if r.status_code == 200:
-                    officers += self.matcher.match_officers(r.text)
+                    officers |= self.matcher.match_officers(r.text)
             return officers
 
         matched_officers = parse_tweet(tweet)
         # Check text of quote retweet
         if tweet.is_quote_status:
-            matched_officers += parse_tweet(tweet.quoted_status)
+            matched_officers |= parse_tweet(tweet.quoted_status)
 
         for officer in matched_officers:
             tweet_text = f'@{tweet.user.screen_name} ' + generate_tweet(officer)
@@ -79,7 +79,7 @@ class BPDHandler(BaseTweetHandler):
         for link in message.message_create['message_data']['entities']['urls']:
             r = requests.get(link['expanded_url'])
             if r.status_code == 200:
-                matched_officers += self.matcher.match_officers(r.text)
+                matched_officers |= self.matcher.match_officers(r.text)
         
         for officer in matched_officers:
             self.client.direct_message(

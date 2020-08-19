@@ -62,10 +62,10 @@ class OfficerMatcher:
         logger.debug(f'Matching against {text}')
         if (self.last_updated - datetime.now()).total_seconds() > self.update_seconds:
             self.load_officers()
-        matched_officers = []
+        matched_officers = set()
         for officer_set in self.officer_names:
             for name in officer_set['names']:
                 if name.lower() in text.lower():
                     logging.info(f"Matched officer {officer_set['officer'].full_name()}")
-                    matched_officers.append(officer_set['officer'])
+                    matched_officers.add(officer_set['officer'])
         return matched_officers
