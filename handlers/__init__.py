@@ -3,6 +3,7 @@ import sys
 import copy
 import logging
 from datetime import datetime
+from fuzzywuzzy import process
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'BPDWatch'))
 from OpenOversight.app.models import Officer
 
@@ -58,14 +59,17 @@ class OfficerMatcher:
         self.officer_names = self.fetch_officers()
         self.last_updated = datetime.now()
 
-    def match_officers(self, text):
-        logger.debug(f'Matching against {text}')
+    def match_officers(self, texts):
+        logger.debug(f'Matching against {", ".join(texts)}')
         if (self.last_updated - datetime.now()).total_seconds() > self.update_seconds:
             self.load_officers()
         matched_officers = set()
+        texts = list(map(str.lower, texts))
         for officer_set in self.officer_names:
             for name in officer_set['names']:
-                if name.lower() in text.lower():
+                _, match_score = process.extractOne(name.lower(), texts)
+                if match_score >= 90:
                     logging.info(f"Matched officer {officer_set['officer'].full_name()}")
                     matched_officers.add(officer_set['officer'])
+                    break
         return matched_officers

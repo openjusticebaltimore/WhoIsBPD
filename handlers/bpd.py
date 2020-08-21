@@ -44,23 +44,27 @@ class BPDHandler(BaseTweetHandler):
     def on_tweet(self, tweet):
         def parse_tweet(_tweet):
             logging.info(f"Parsing tweet: {_tweet.text}")
-            # remove periods, lower case, remove double+ spaces bw words
-            tweet_text = ' '.join(_tweet.text.lower().replace('.','').split())
-            officers = self.matcher.match_officers(tweet_text)
+            texts = [_tweet.text]
             # Check text of any links
             for link in _tweet.entities['urls']:
                 r = requests.get(link['expanded_url'])
                 if r.status_code == 200:
-                    officers |= self.matcher.match_officers(r.text)
-            return officers
+                    texts.append(r.text)
+            return self.matcher.match_officers(texts)
 
         matched_officers = parse_tweet(tweet)
         # Check text of quote retweet
         if tweet.is_quote_status:
             matched_officers |= parse_tweet(tweet.quoted_status)
 
+        recipient_screen_names = set([tweet.user.screen_name])
+        for user in tweet.entities['user_mentions']:
+            recipient_screen_names |= user['screen_name']
         for officer in matched_officers:
-            tweet_text = f'@{tweet.user.screen_name} ' + generate_tweet(officer)
+            tweet_text = ''
+            for screen_name in recipient_screen_names:
+                tweet_text += f'@{screen_name} '
+            tweet_text += generate_tweet(officer)
             self.client.tweet(
                 tweet_text,
                 in_reply_to=tweet.id
@@ -71,16 +75,15 @@ class BPDHandler(BaseTweetHandler):
         msg_text = message.message_create['message_data']['text']
         logging.info(f"Parsing direct message: {msg_text}")
         
-        # remove periods, lower case, remove double+ spaces bw words
-        msg_text = ' '.join(msg_text.lower().replace('.','').split())
-        matched_officers = self.matcher.match_officers(msg_text)
-        
+        texts = [msg_text]
         # Check text of any links
         for link in message.message_create['message_data']['entities']['urls']:
             r = requests.get(link['expanded_url'])
             if r.status_code == 200:
-                matched_officers |= self.matcher.match_officers(r.text)
+                texts.append(r.text)
         
+        matched_officers = self.matcher.match_officers(texts)
+
         for officer in matched_officers:
             self.client.direct_message(
                 user_id=int(message.message_create['sender_id']),
