@@ -57,7 +57,7 @@ class BPDHandler(BaseTweetHandler):
         matched_officers = parse_tweet(tweet)
         # Check text of quote retweet
         if tweet.is_quote_status:
-            matched_officers |= parse_tweet(tweet.quoted_status)
+            matched_officers |= parse_tweet(tweet.quoted_tweet)
 
         other_mentions = [user['screen_name'] for user in tweet.entities['user_mentions']]
         recipient_screen_names = set([tweet.user.screen_name] + other_mentions)
