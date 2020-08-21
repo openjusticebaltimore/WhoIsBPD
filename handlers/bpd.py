@@ -57,9 +57,8 @@ class BPDHandler(BaseTweetHandler):
         if tweet.is_quote_status:
             matched_officers |= parse_tweet(tweet.quoted_status)
 
-        recipient_screen_names = set([tweet.user.screen_name])
-        for user in tweet.entities['user_mentions']:
-            recipient_screen_names |= user['screen_name']
+        other_mentions = [user['screen_name'] for user in tweet.entities['user_mentions']]
+        recipient_screen_names = set([tweet.user.screen_name] + other_mentions)
         for officer in matched_officers:
             tweet_text = ''
             for screen_name in recipient_screen_names:
