@@ -59,15 +59,17 @@ class BPDHandler(BaseTweetHandler):
 
         other_mentions = [user['screen_name'] for user in tweet.entities['user_mentions']]
         recipient_screen_names = set([tweet.user.screen_name] + other_mentions)
+        in_reply_to = tweet.id
         for officer in matched_officers:
             tweet_text = ''
             for screen_name in recipient_screen_names:
                 tweet_text += f'@{screen_name} '
             tweet_text += generate_tweet(officer)
-            self.client.tweet(
+            sent_tweet = self.client.tweet(
                 tweet_text,
-                in_reply_to=tweet.id
+                in_reply_to=in_reply_to
             )
+            in_reply_to = sent_tweet.id
             sleep(1)
     
     def on_direct_message(self, message):
