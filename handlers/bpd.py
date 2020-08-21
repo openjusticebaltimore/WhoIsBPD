@@ -44,13 +44,15 @@ class BPDHandler(BaseTweetHandler):
     def on_tweet(self, tweet):
         def parse_tweet(_tweet):
             logging.info(f"Parsing tweet: {_tweet.text}")
-            texts = [_tweet.text]
+            officers = self.matcher.match_officers_fuzzy([_tweet.text])
             # Check text of any links
+            link_texts = []
             for link in _tweet.entities['urls']:
                 r = requests.get(link['expanded_url'])
                 if r.status_code == 200:
-                    texts.append(r.text)
-            return self.matcher.match_officers(texts)
+                    link_texts.append(r.text)
+            officers |= self.matcher.match_officers(link_texts)
+            return officers
 
         matched_officers = parse_tweet(tweet)
         # Check text of quote retweet
@@ -70,24 +72,24 @@ class BPDHandler(BaseTweetHandler):
                 in_reply_to=in_reply_to
             )
             in_reply_to = sent_tweet.id
-            sleep(1)
+            sleep(30)
     
     def on_direct_message(self, message):
         msg_text = message.message_create['message_data']['text']
         logging.info(f"Parsing direct message: {msg_text}")
         
-        texts = [msg_text]
+        matched_officers = self.matcher.match_officers_fuzzy([msg_text])
+        link_texts = []
         # Check text of any links
         for link in message.message_create['message_data']['entities']['urls']:
             r = requests.get(link['expanded_url'])
             if r.status_code == 200:
-                texts.append(r.text)
-        
-        matched_officers = self.matcher.match_officers(texts)
+                link_texts.append(r.text)
+        matched_officers |= self.matcher.match_officers(link_texts)
 
         for officer in matched_officers:
             self.client.direct_message(
                 user_id=int(message.message_create['sender_id']),
                 text=generate_tweet(officer)
             )
-            sleep(1)
+            sleep(30)

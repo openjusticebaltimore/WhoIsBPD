@@ -3,7 +3,7 @@ import sys
 import copy
 import logging
 from datetime import datetime
-from fuzzywuzzy import process
+from fuzzywuzzy import process, fuzz
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'BPDWatch'))
 from OpenOversight.app.models import Officer
 
@@ -20,6 +20,10 @@ equivalent_suffixes = [
     ('3rd', 'iii'),
     ('4th', 'iv')
 ]
+
+
+class MatchedOfficer(Exception):
+    pass
 
 
 class OfficerMatcher:
@@ -66,10 +70,34 @@ class OfficerMatcher:
         matched_officers = set()
         texts = list(map(str.lower, texts))
         for officer_set in self.officer_names:
-            for name in officer_set['names']:
-                _, match_score = process.extractOne(name.lower(), texts)
-                if match_score >= 90:
-                    logging.info(f"Matched officer {officer_set['officer'].full_name()}")
-                    matched_officers.add(officer_set['officer'])
-                    break
+            try:
+                for name in officer_set['names']:
+                    for text in texts:
+                        if name.lower() in text:
+                            logger.info(f"Matched officer {officer_set['officer'].full_name()}")
+                            matched_officers.add(officer_set['officer'])
+                            raise MatchedOfficer
+            except MatchedOfficer:
+                pass
+        return matched_officers
+
+    def match_officers_fuzzy(self, texts, sort=False):
+        '''Only matches texts against full name of officer, for performance reasons'''
+
+        logger.debug(f'Matching against {", ".join(texts)}')
+        if (self.last_updated - datetime.now()).total_seconds() > self.update_seconds:
+            self.load_officers()
+        matched_officers = set()
+        texts = list(map(str.lower, texts))
+        for officer_set in self.officer_names:
+            officer_full_name = officer_set['officer'].full_name()
+            _, match_score = process.extractOne(
+                officer_full_name.lower(),
+                texts,
+                scorer=fuzz.token_sort_ratio if sort else fuzz.token_set_ratio
+            )
+            if match_score >= 90:
+                logger.info(f"Matched officer {officer_full_name}")
+                matched_officers.add(officer_set['officer'])
+                # break
         return matched_officers
